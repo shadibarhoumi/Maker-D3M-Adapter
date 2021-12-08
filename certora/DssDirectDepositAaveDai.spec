@@ -4,11 +4,18 @@ using Vat as vat
 using InterestStrategyMock as interestStrategy
 using StableDebtMock as stableDebt
 using VariableDebtMock as variableDebt
+using Dai as dai
+using End as end
+using ChainlogMock as chainlog
+// using DaiJoin as daiJoin
+using ADaiMock as adai
+using PoolMock as pool
 
 methods {
     bar() returns (uint256) envfree
     king() returns (address) envfree
     live() returns (uint256) envfree
+    ilk() returns (bytes32) envfree
     tau() returns (uint256) envfree
     vat() returns (address) envfree
     wards(address) returns (uint256) envfree
@@ -17,6 +24,12 @@ methods {
     variableDebt() returns (address) envfree
     calculateTargetSupply(uint256) returns (uint256) envfree
     vat.live() returns (uint256) envfree
+    vat.ilks(bytes32) returns (uint256, uint256, uint256, uint256, uint256) envfree
+    vat.urns(bytes32, address) returns (uint256, uint256) envfree
+    dai.balanceOf(address) returns (uint256) envfree
+    chainlog.end() returns (address) envfree
+    chainlog.getAddress(bytes32) returns (address) envfree
+    adai.balanceOf(address) returns (uint256) envfree
     interestStrategy.baseVariableBorrowRate() returns (uint256) envfree
     interestStrategy.getMaxVariableBorrowRate() returns (uint256) envfree
     interestStrategy.variableRateSlope1() returns (uint256) envfree
@@ -222,4 +235,56 @@ rule calculateTargetSupply_revert(uint256 targetInterestRate) {
     assert(lastReverted => revert1 || revert2 || revert3 || revert4
                         || revert5 || revert6 || revert7 || revert8
                         || revert9 || revert10 || revert11, "Revert rules are not covering all the cases");
+}
+
+rule exec_normal_wind() {
+    env e;
+
+    require(chainlog.end() == end);
+
+    uint256 vatLive = vat.live();
+    uint256 live = live();
+
+    require(vatLive != 0);
+    require(live != 0);
+
+    uint256 availableLiquidity = dai.balanceOf(adai);
+    uint256 sTotalSupply = stableDebt.totalSupply();
+    uint256 vTotalSupply = variableDebt.totalSupply();
+
+    uint256 supplyAmt = availableLiquidity + sTotalSupply + vTotalSupply;
+
+    uint256 targetSupply = bar() > 0 ? calculateTargetSupply(bar()) : 0;
+
+    require(targetSupply > supplyAmt);
+
+    uint256 amt = targetSupply - supplyAmt;
+
+    uint256 Art;
+    uint256 rate;
+    uint256 spot;
+    uint256 line;
+    uint256 dust;
+    Art, rate, spot, line, dust = vat.ilks(ilk());
+    uint256 lineWad = line / RAY();
+    amt = Art + amt > lineWad ? lineWad - Art : amt;
+
+    uint256 art;
+    uint256 ink;
+    art, ink = vat.urns(ilk(), currentContract);
+    uint256 adaiBalance = adai.balanceOf(currentContract);
+    uint256 daiBalance = dai.balanceOf(adai);
+
+    exec(e);
+
+    uint256 art2;
+    uint256 ink2;
+    art2, ink2 = vat.urns(ilk(), currentContract);
+    uint256 adaiBalance2 = adai.balanceOf(currentContract);
+    uint256 daiBalance2 = dai.balanceOf(adai);
+
+    assert(ink2 == ink + amt, "ink has not increased as expected");
+    assert(art2 == art + amt, "art has not increased as expected");
+    assert(adaiBalance2 == adaiBalance + amt, "adaiBalance has not increased as expected");
+    assert(daiBalance2 == daiBalance + amt, "daiBalance has not increased as expected");
 }
