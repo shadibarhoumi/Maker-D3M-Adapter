@@ -269,17 +269,17 @@ rule exec_normal_wind() {
     uint256 lineWad = line / RAY();
     amt = Art + amt > lineWad ? lineWad - Art : amt;
 
-    uint256 art;
     uint256 ink;
-    art, ink = vat.urns(ilk(), currentContract);
+    uint256 art;
+    ink, art = vat.urns(ilk(), currentContract);
     uint256 adaiBalance = adai.balanceOf(currentContract);
     uint256 daiBalance = dai.balanceOf(adai);
 
     exec(e);
 
-    uint256 art2;
     uint256 ink2;
-    art2, ink2 = vat.urns(ilk(), currentContract);
+    uint256 art2;
+    ink2, art2 = vat.urns(ilk(), currentContract);
     uint256 adaiBalance2 = adai.balanceOf(currentContract);
     uint256 daiBalance2 = dai.balanceOf(adai);
 
