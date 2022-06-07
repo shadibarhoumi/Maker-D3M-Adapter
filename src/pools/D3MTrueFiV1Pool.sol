@@ -52,7 +52,7 @@ interface PortfolioLike is TokenLike {
     function liquidValue() external view returns (uint256);
 }
 
-contract D3mTrueFiV1Pool is ID3MPool {
+contract D3MTrueFiV1Pool is ID3MPool {
 
     PortfolioLike public immutable portfolio;
 
@@ -60,7 +60,7 @@ contract D3mTrueFiV1Pool is ID3MPool {
     mapping (address => uint256) public wards;
     
     modifier auth {
-        require(wards[msg.sender] == 1, "D3mTrueFiV1DaiPool/not-authorized");
+        require(wards[msg.sender] == 1, "D3MTrueFiV1DaiPool/not-authorized");
         _;
     }
 

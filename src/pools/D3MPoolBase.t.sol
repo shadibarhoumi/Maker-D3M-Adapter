@@ -16,8 +16,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pragma solidity ^0.8.14;
-
-import "ds-test/test.sol";
+import { DSTest } from "../../lib/ds-test/src/test.sol";
 import {DaiLike, CanLike, D3mHubLike} from "../tests/interfaces/interfaces.sol";
 
 import "./ID3MPool.sol";
@@ -34,7 +33,7 @@ interface Hevm {
     function load(address, bytes32) external view returns (bytes32);
 }
 
-contract D3MPoolBase is ID3MPool {
+contract D3MPoolBase is ID3MPool, DSTest {
 
     DaiLike public immutable asset; // Dai
 
